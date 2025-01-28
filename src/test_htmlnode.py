@@ -13,7 +13,7 @@ class TestHTMLNode(unittest.TestCase):
         node = HTMLNode("a", "b", [HTMLNode("p"), HTMLNode("h1")], my_dict)
         self.assertEqual("HTMLNode(a, b, [HTMLNode(p, None, None, None), HTMLNode(h1, None, None, None)], {'href': 'https://www.google.com', 'target': '_blank'})", repr(node))
 
-    def test_to_html(self):
+    def test_to_html_error(self):
         node = HTMLNode("a")
         with self.assertRaises(NotImplementedError):
             node.to_html()
