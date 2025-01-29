@@ -83,3 +83,13 @@ def split_nodes_link(old_nodes:list[TextNode]):
         new_nodes.append(TextNode(f"{links[0][0]}", TextType.LINK, f"{links[0][1]}"))
         new_nodes.extend(split_nodes_link([TextNode(f"{sections[1]}", TextType.NORMAL)]))
     return new_nodes
+
+def text_to_textnodes(text):
+    nodes = [TextNode(text, TextType.NORMAL)]  
+    nodes = split_nodes_delimiter(nodes, "**", TextType.BOLD)
+    nodes = split_nodes_delimiter(nodes, "*", TextType.ITALIC)
+    nodes = split_nodes_delimiter(nodes, "`", TextType.CODE)
+    nodes = split_nodes_image(nodes)
+    nodes = split_nodes_link(nodes)
+    return nodes
+
