@@ -10,8 +10,8 @@ class TestTextConversion(unittest.TestCase):
         bold = TextNode("This is bold", TextType.BOLD)
         italic = TextNode("This is italic", TextType.ITALIC)
         code = TextNode("This is code", TextType.CODE)
-        image = TextNode("This image is beautiful", TextType.IMAGES, "https://image.boot.dev")
-        link = TextNode("Go here", TextType.LINKS, "https://www.boot.dev")
+        image = TextNode("This image is beautiful", TextType.IMAGE, "https://image.boot.dev")
+        link = TextNode("Go here", TextType.LINK, "https://www.boot.dev")
 
         self.assertEqual(text_node_to_html_node(normal), LeafNode(None, normal.text))
         self.assertEqual(text_node_to_html_node(bold), LeafNode("b", bold.text))
@@ -21,8 +21,8 @@ class TestTextConversion(unittest.TestCase):
         self.assertEqual(text_node_to_html_node(link), LeafNode("a", link.text, {"href": link.url}))       
 
     def test_type_no_url(self):
-        image = TextNode("This image is beautiful", TextType.IMAGES, None)
-        link = TextNode("Go here", TextType.LINKS, None)
+        image = TextNode("This image is beautiful", TextType.IMAGE, None)
+        link = TextNode("Go here", TextType.LINK, None)
         with self.assertRaises(Exception):
             text_node_to_html_node(image)
         with self.assertRaises(Exception):
@@ -100,6 +100,28 @@ class TestTextConversion(unittest.TestCase):
         self.assertEqual(output, 
                          [("link", "http://example.com"),
                           ("multi word link", "http://test.com")])
+            
+    def test_split_link(self):        
+        node = TextNode(
+            "Start [first](img1.jpg) middle [second](img2.jpg) end", 
+            TextType.NORMAL)        
+        self.assertListEqual(split_nodes_link([node]), [TextNode("Start ", TextType.NORMAL, None), TextNode("first", TextType.LINK, "img1.jpg"), TextNode(" middle ", TextType.NORMAL, None), TextNode("second", TextType.LINK, "img2.jpg"), TextNode(" end", TextType.NORMAL, None)])
+
+    def test_split_image_multiple(self):
+        node = TextNode(
+            "Start with ![first](img1.jpg) middle ![second](img2.jpg) end",
+            TextType.NORMAL)
+        self.assertListEqual(split_nodes_image([node]), [TextNode("Start with ", TextType.NORMAL, None), TextNode("first", TextType.IMAGE, "img1.jpg"), TextNode(" middle ", TextType.NORMAL, None), TextNode("second", TextType.IMAGE, "img2.jpg"), TextNode(" end", TextType.NORMAL, None)])
+    
+    def test_split_image_single(self):
+        node = TextNode(
+            "![image](https://www.example.COM/IMAGE.PNG)",
+            TextType.NORMAL)
+        new_nodes = split_nodes_image([node])
+        self.assertListEqual(
+            [TextNode("image", TextType.IMAGE, "https://www.example.COM/IMAGE.PNG")], 
+            new_nodes)
+
 
 
 
