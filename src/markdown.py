@@ -1,4 +1,6 @@
 import re
+from htmlnode import *
+from utility import text_to_textnodes, text_node_to_html_node
 
 def markdown_to_blocks(markdown):
     blocks = markdown.split("\n\n")
@@ -15,7 +17,7 @@ def markdown_to_blocks(markdown):
 def block_to_block_type(block):
     lines = block.split("\n")
     
-    if block.startswith(("#", "##", "###", "####", "#####", "######")):
+    if block.startswith(("# ", "## ", "### ", "#### ", "##### ", "###### ")):
         return "heading"
     if len(lines) > 1 and lines[0].startswith("```") and lines[-1].startswith("```"):
         return "code"
@@ -41,3 +43,68 @@ def block_to_block_type(block):
         return "ordered_list"
         
     return "paragraph"
+
+def markdown_to_html_node(markdown):
+    blocks = markdown_to_blocks(markdown)
+    all_blocks = []
+
+    for block in blocks:
+        # code/quote/unordered_list/ordered_list/paragraph/heading
+        block_type = block_to_block_type(block)
+
+        match block_type:
+            case "heading":                        
+                count = 0
+                for letter in block:
+                    if letter == "#":
+                        count += 1
+                    else:
+                        break
+                text = block.lstrip("#").strip()
+                children = text_to_children(text)
+                all_blocks.append(ParentNode(f"h{count}", children))
+
+            case "paragraph":
+                children = text_to_children(block)
+                all_blocks.append(ParentNode("p", children))
+
+            case "quote":
+                text = block.lstrip(">").strip()
+                children = text_to_children(text)
+                all_blocks.append(ParentNode("blockquote", children))
+
+            case "code":
+                text = block.lstrip("`")
+                text = text.rstrip("`")
+                all_blocks.append(ParentNode("pre", ParentNode("code", LeafNode(None, text))))
+            
+            case "ordered_list":
+                lines = block.split("\n")
+                list_children = []
+                for line in lines:                    
+                    text = line.lstrip("0123456789.")
+                    text = text.strip()
+                    children = text_to_children(text)                    
+                    list_children.append(ParentNode("li", children))
+                all_blocks.append(ParentNode("ol", list_children))
+                    
+            case "unordered_list":
+                lines = block.split("\n")
+                list_children = []
+                for line in lines:
+                    text = line.lstrip("*-")
+                    text = text.strip()
+                    children = text_to_children(text)
+                    list_children.append(ParentNode("li", children))
+                all_blocks.append(ParentNode("ul", list_children))
+                    
+    return ParentNode("div", all_blocks)
+    
+
+
+def text_to_children(text):
+    text_nodes = text_to_textnodes(text)
+    html_nodes = []
+    for node in text_nodes:
+        html_nodes.append(text_node_to_html_node(node))
+    return html_nodes
