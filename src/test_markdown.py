@@ -1,5 +1,6 @@
 import unittest
-from markdown import block_to_block_type, markdown_to_blocks
+from markdown import block_to_block_type, markdown_to_blocks, markdown_to_html_node, extract_title
+from htmlnode import *
 
 class TestMardown(unittest.TestCase):
     def test_markdown_to_blocks(self):
@@ -68,6 +69,36 @@ This is the same paragraph on a new line
     def test_block_type_paragraph(self):
         md = "We will go out on our own"
         self.assertEqual(block_to_block_type(md), "paragraph")
+    
+    def test_markdown_to_html_output(self):
+        markdown = "# Heading\n\nParagraph with **bold**"
+        result = markdown_to_html_node(markdown).to_html()
+        expected = "<div><h1>Heading</h1><p>Paragraph with <b>bold</b></p></div>"
+        self.assertEqual(result, expected)
+
+    def test_heading_conversion(self):
+        markdown = "# Heading 1"
+        result = markdown_to_html_node(markdown).to_html()
+        self.assertEqual(result, "<div><h1>Heading 1</h1></div>")
+
+    def test_unordered_list(self):
+        markdown = "* Item 1\n* Item 2"
+        result = markdown_to_html_node(markdown).to_html()
+        self.assertEqual(result, "<div><ul><li>Item 1</li><li>Item 2</li></ul></div>")
+
+    def test_inline_formatting(self):
+        markdown = "Text with **bold** and *italic*"
+        result = markdown_to_html_node(markdown).to_html()
+        self.assertTrue("<b>bold</b>" in result)
+        self.assertTrue("<i>italic</i>" in result)
+
+    def test_extract_title_no_heading(self):
+        with self.assertRaises(Exception):
+            extract_title("1. No Heading")
+    
+    def test_extract_title_heading(self):
+        text = "1. No heading\n\n## h2 header\n\n# This is special"
+        self.assertEqual(extract_title(text), "This is special")
 
 if __name__ == "__main__":
     unittest.main()

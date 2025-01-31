@@ -65,7 +65,9 @@ def markdown_to_html_node(markdown):
                 all_blocks.append(ParentNode(f"h{count}", children))
 
             case "paragraph":
-                children = text_to_children(block)
+                lines = block.split("\n")
+                paragraph = " ".join(lines)
+                children = text_to_children(paragraph)
                 all_blocks.append(ParentNode("p", children))
 
             case "quote":
@@ -76,7 +78,7 @@ def markdown_to_html_node(markdown):
             case "code":
                 text = block.lstrip("`")
                 text = text.rstrip("`")
-                all_blocks.append(ParentNode("pre", ParentNode("code", LeafNode(None, text))))
+                all_blocks.append(ParentNode("pre", [ParentNode("code", [LeafNode(None, text)])]))
             
             case "ordered_list":
                 lines = block.split("\n")
@@ -99,7 +101,14 @@ def markdown_to_html_node(markdown):
                 all_blocks.append(ParentNode("ul", list_children))
                     
     return ParentNode("div", all_blocks)
-    
+
+def extract_title(markdown):
+    blocks = markdown_to_blocks(markdown)
+    for block in blocks:
+        if block.startswith("# "):
+            return block.lstrip("#").strip()
+        
+    raise Exception("Markdown Error: No h1 header found in document")
 
 
 def text_to_children(text):
